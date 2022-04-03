@@ -12,6 +12,8 @@ contract KotH {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     address king;
 
+    event Captured(address indexed king, uint256 indexed amount);
+
     /**
      * @dev Contribute a bounty larger than the existing,
      * to capture the hill and recieve the existing bounty.
@@ -29,12 +31,15 @@ contract KotH {
         king = msg.sender;
         expires = block.timestamp + 13000;
 
+        // if this isn't the first claim
         if (txAmount != 0) {
             (bool result, ) = payable(msg.sender).call{value: txAmount}("");
             if (!result) {
                 revert();
             }
         }
+
+        emit Captured(king, msg.value);
     }
 
     /**
@@ -45,6 +50,8 @@ contract KotH {
         require(block.timestamp >= expires, "hill hasn't expired yet");
 
         uint256 txAmount = currentAmount;
+
+        // reset the state
         currentAmount = 0;
         expires = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
