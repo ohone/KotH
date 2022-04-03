@@ -8,6 +8,7 @@ import "./Hevm.sol";
 contract KotHTest is DSTest {
     Hevm vm = Hevm(HEVM_ADDRESS);
     KotH CuT;
+    event Captured(address indexed king, uint256 indexed amount);
 
     function setUp() public {
         CuT = new KotH();
@@ -38,6 +39,20 @@ contract KotHTest is DSTest {
         uint256 beforeClaimBalance = address(this).balance;
 
         // act
+        CuT.capture{value: 2}();
+
+        // assert
+        assertEq(beforeClaimBalance, address(this).balance + 1);
+    }
+
+    function testCapture_EmitsEvent() public {
+        // setup
+        CuT.capture{value: 1}();
+        uint256 beforeClaimBalance = address(this).balance;
+
+        // act
+        vm.expectEmit(true, true, false, false);
+        emit Captured(address(this), 2);
         CuT.capture{value: 2}();
 
         // assert
