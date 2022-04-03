@@ -48,9 +48,7 @@ contract KotH {
         currentAmount = 0;
         expires = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-        (bool result, bytes memory data) = payable(msg.sender).call{
-            value: txAmount
-        }("");
+        (bool result, ) = payable(msg.sender).call{value: txAmount}("");
         if (!result) {
             revert();
         }
