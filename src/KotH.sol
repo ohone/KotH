@@ -2,15 +2,24 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+
 /**
  * @title KotH
  * @dev King of the hill game.
  */
 contract KotH {
     uint256 public currentAmount;
+    uint256 public reignTimespan;
     uint256 public expires =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     address king;
+    address tokenAddress;
+
+    constructor(address targetERC20, uint256 _reignTimespan) {
+        tokenAddress = targetERC20;
+        reignTimespan = _reignTimespan;
+    }
 
     event Captured(address indexed king, uint256 indexed amount);
 
@@ -18,28 +27,29 @@ contract KotH {
      * @dev Contribute a bounty larger than the existing,
      * to capture the hill and recieve the existing bounty.
      */
-    function capture() external payable {
+    function capture(uint256 amount) external payable {
         require(
-            msg.value > currentAmount,
+            amount > currentAmount,
             "must contribute more than current king"
         );
         require(block.timestamp < expires, "round has been won");
 
         uint256 txAmount = currentAmount;
-        currentAmount = msg.value;
+        currentAmount = amount;
 
         king = msg.sender;
-        expires = block.timestamp + 13000;
+        expires = block.timestamp + reignTimespan;
+
+        // transfer tokens from new king
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
 
         // if this isn't the first claim
         if (txAmount != 0) {
-            (bool result, ) = payable(msg.sender).call{value: txAmount}("");
-            if (!result) {
-                revert();
-            }
+            // send bounty to new king
+            IERC20(tokenAddress).transfer(msg.sender, txAmount);
         }
 
-        emit Captured(king, msg.value);
+        emit Captured(king, amount);
     }
 
     /**
@@ -55,9 +65,6 @@ contract KotH {
         currentAmount = 0;
         expires = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-        (bool result, ) = payable(msg.sender).call{value: txAmount}("");
-        if (!result) {
-            revert();
-        }
+        IERC20(tokenAddress).transfer(msg.sender, txAmount);
     }
 }
