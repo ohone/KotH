@@ -102,7 +102,7 @@ contract KotHTest is DSTest {
         vm.warp(reign + 1);
 
         // act
-        CuT.claimVictory();
+        CuT.claimVictory(address(this));
 
         // assert
         assertEq(beforeBalance + captureAmount, token.balanceOf(address(this)));
@@ -118,6 +118,6 @@ contract KotHTest is DSTest {
         // act assert
         vm.startPrank(address(1));
         vm.expectRevert("must be king to claim victory");
-        CuT.claimVictory();
+        CuT.claimVictory(address(this));
     }
 }
