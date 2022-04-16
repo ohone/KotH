@@ -2,8 +2,6 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
-
 /**
  * @title KotH
  * @dev King of the hill game.
