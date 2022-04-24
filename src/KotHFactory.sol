@@ -9,7 +9,7 @@ import "./KotH.sol";
  * @dev King of the hill game.
  */
 contract KotHFactory {
-    event KotHCreated(address ctr, address indexed token);
+    event KotHCreated(address koth, address indexed token);
 
     function CreateKotH(uint256 reign, address token)
         external
