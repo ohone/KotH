@@ -9,14 +9,14 @@ import "./KotH.sol";
  * @dev King of the hill game.
  */
 contract KotHFactory {
-    event KotHCreated(address indexed ctr);
+    event KotHCreated(address ctr, address indexed token);
 
     function CreateKotH(uint256 reign, address token)
         external
         returns (address)
     {
         address contractAddr = address(new KotH(token, reign));
-        emit KotHCreated(contractAddr);
+        emit KotHCreated(contractAddr, token);
         return contractAddr;
     }
 }
