@@ -17,6 +17,7 @@ contract KotHFactory {
     {
         address contractAddr = address(new KotH(token, reign));
         emit KotHCreated(contractAddr, token);
+
         return contractAddr;
     }
 }
