@@ -1,8 +1,13 @@
 # king of the hill
 
+Simple EVM smart contract 'game'. 
+
 A player can deposit in the contract a larger amount of the target ERC20 than the previous, to claim the previous player's deposit (player becomes the king of the hill).
 
-If the king isn't usurped for X seconds, he can retrieve his locked tokens, and the game restarts.
+If the king isn't usurped for a defined amount of time, he can retrieve his locked tokens, and the game restarts.
+
+![flow describing capturing of the hill](capture.png "Capture")
+![flow describing victory over the hill](victory.png "Victory")
 
 ## Functions (write)
 
@@ -22,6 +27,7 @@ Claims victory over the hill for `msg.sender`. Transfers the deposit back to `ms
 `revert`:
 
 - `msg.sender` isn't currently the king.
+- `block.timestamp` < `expiry` - the hill is still in play.
 
 ## Build + Test
 
