@@ -2,50 +2,75 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "./IKotH.sol";
+
 /**
  * @title KotH
  * @dev King of the hill game.
  */
-contract KotH {
+contract KotH is IKotH {
     uint256 public currentAmount;
+    uint256 public reignTimespan;
     uint256 public expires =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-    address king;
+    address public king;
+    address public tokenAddress;
 
-    event Captured(address indexed king, uint256 indexed amount);
+    function getCurrentAmount() public view returns (uint256) {
+        return currentAmount;
+    }
+
+    function getCurrentKing() external view returns (address) {
+        return king;
+    }
+
+    function getTokenAddress() external view returns (address) {
+        return tokenAddress;
+    }
+
+    function getExpires() external view returns (uint256) {
+        return expires;
+    }
+
+    constructor(address targetERC20, uint256 _reignTimespan) {
+        tokenAddress = targetERC20;
+        reignTimespan = _reignTimespan;
+    }
 
     /**
      * @dev Contribute a bounty larger than the existing,
      * to capture the hill and recieve the existing bounty.
      */
-    function capture() external payable {
+    function capture(uint256 amount) external payable {
         require(
-            msg.value > currentAmount,
+            amount > currentAmount,
             "must contribute more than current king"
         );
         require(block.timestamp < expires, "round has been won");
 
         uint256 txAmount = currentAmount;
-        currentAmount = msg.value;
+        currentAmount = amount;
 
         king = msg.sender;
-        expires = block.timestamp + 13000;
+        expires = block.timestamp + reignTimespan;
+
+        // transfer tokens from new king
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
 
         // if this isn't the first claim
         if (txAmount != 0) {
-            (bool result, ) = payable(msg.sender).call{value: txAmount}("");
-            if (!result) {
-                revert();
-            }
+            // send bounty to new king
+            IERC20(tokenAddress).transfer(msg.sender, txAmount);
         }
 
-        emit Captured(king, msg.value);
+        emit Captured(king, amount);
     }
 
     /**
-     * @dev Claim victory over the hill, retrieve your locked ether.
+     * @dev Claim victory over the hill, retrieve the bounty.
      */
-    function claimVictory() external {
+    function claimVictory(address receiver) external returns (uint256 reward) {
         require(msg.sender == king, "must be king to claim victory");
         require(block.timestamp >= expires, "hill hasn't expired yet");
 
@@ -54,10 +79,8 @@ contract KotH {
         // reset the state
         currentAmount = 0;
         expires = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
-        (bool result, ) = payable(msg.sender).call{value: txAmount}("");
-        if (!result) {
-            revert();
-        }
+        king = address(0);
+        IERC20(tokenAddress).transfer(receiver, txAmount);
+        return txAmount;
     }
 }
